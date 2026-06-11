@@ -3,251 +3,406 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>男女固定 席替えメーカー（手動トレード＆割合指定版）</title>
-    <style>
-        /* 全体のスタイル */
-        body {
-            font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', sans-serif;
-            background-color: #f4f7f6;
-            text-align: center;
-            padding: 20px;
-            margin: 0;
-        }
-        h1 { color: #333; margin-bottom: 5px; }
-        p { color: #666; font-size: 14px; margin-bottom: 5px; }
-        .notice { color: #2c3e50; font-size: 13px; font-weight: bold; margin-bottom: 10px; }
-        .notice span { color: #e74c3c; }
-        
-        /* 保存メッセージ表示 */
-        #save-status {
-            font-size: 12px;
-            color: #27ae60;
-            font-weight: bold;
-            height: 15px;
-            margin-bottom: 15px;
-        }
+    <title>男女固定 席替えメーカー（高機能メニュー版）</title>
+<style>
+/* =================================================================
+   席替えメーカー CSSデザイン (サイドメニュー＆アニメーション対応版)
+   ================================================================= */
 
-        /* 設定エリアのレイアウト */
-        .config-wrapper {
-            max-width: 900px;
-            margin: 0 auto 30px auto;
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-        }
-        .setup-container {
-            display: flex;
-            justify-content: center;
-            gap: 20px;
-            margin-bottom: 20px;
-        }
-        .input-group {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            flex: 1;
-        }
-        label { font-weight: bold; margin-bottom: 8px; font-size: 14px; }
-        textarea {
-            width: 100%;
-            height: 120px;
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            resize: none;
-            font-size: 14px;
-        }
+/* 全体のスタイル */
+body {
+    font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', sans-serif;
+    background-color: #f4f7f6;
+    text-align: center;
+    padding: 20px;
+    margin: 0;
+}
 
-        /* カスタム設定エリア */
-        .control-panel {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            padding-top: 15px;
-            border-top: 1px dashed #eee;
-        }
-        .size-container, .shuffle-rate-container {
-            display: flex;
-            justify-content: center;
-            gap: 30px;
-            align-items: center;
-            font-weight: bold;
-        }
-        .size-group, .rate-group {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .size-group input[type="number"] {
-            width: 60px;
-            padding: 5px;
-            font-size: 16px;
-            text-align: center;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-        }
-        .rate-group input[type="range"] {
-            width: 200px;
-            cursor: pointer;
-        }
-        #rate-value {
-            color: #e67e22;
-            font-size: 18px;
-            display: inline-block;
-            width: 50px;
-        }
+h1 { 
+    color: #333; 
+    margin-bottom: 5px; 
+    padding-left: 50px; 
+}
 
-        /* 操作ボタン */
-        .button-container { margin-bottom: 30px; display: flex; justify-content: center; gap: 15px; }
-        button {
-            border: none;
-            padding: 12px 30px;
-            font-size: 16px;
-            font-weight: bold;
-            border-radius: 5px;
-            cursor: pointer;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            transition: background 0.2s;
-        }
-        #apply-btn { background-color: #34495e; color: white; }
-        #apply-btn:hover { background-color: #2c3e50; }
-        #shuffle-btn { background-color: #2ecc71; color: white; }
-        #shuffle-btn:hover { background-color: #27ae60; }
+p { 
+    color: #666; 
+    font-size: 14px; 
+    margin-bottom: 5px; 
+}
 
-        /* 黒板 */
-        .blackboard {
-            background-color: #2e4d3c;
-            color: white;
-            width: 400px;
-            margin: 0 auto 30px auto;
-            padding: 12px;
-            border: 4px solid #8b5a2b;
-            border-radius: 3px;
-            font-weight: bold;
-            font-size: 18px;
-        }
+.notice { 
+    color: #2c3e50; 
+    font-size: 13px; 
+    font-weight: bold; 
+    margin-bottom: 10px; 
+}
 
-        /* 座席のグリッド */
-        .classroom {
-            display: grid;
-            gap: 15px;
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 25px;
-            background-color: white;
-            border-radius: 8px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-        }
+.notice span { 
+    color: #e74c3c; 
+}
 
-        /* 座席のデザイン */
-        .seat {
-            box-sizing: border-box;
-            font-size: 20px;
-            font-weight: bold;
-            line-height: 1.3;
-            word-break: break-all;
-            border-radius: 8px;
-            border: 2px solid #ccc;
-            cursor: pointer;
-            user-select: none;
-            min-height: 80px;
-            padding: 10px 5px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: transform 0.2s, box-shadow 0.2s, background-color 0.2s;
-            position: relative;
-        }
-        .seat:hover {
-            transform: scale(1.03);
-            box-shadow: 0 6px 12px rgba(0,0,0,0.15);
-        }
+/* 保存メッセージ表示 */
+#save-status {
+    font-size: 12px;
+    color: #27ae60;
+    font-weight: bold;
+    height: 15px;
+    margin-bottom: 15px;
+}
 
-        /* 各座席のタイプ別色分け */
-        .boy-seat { background-color: #e3f2fd; color: #0d47a1; border-color: #64b5f6; }
-        .girl-seat { background-color: #fce4ec; color: #880e4f; border-color: #f06292; }
-        .empty-seat { background-color: #eeeeee; color: #9e9e9e; border-color: #bdbdbd; border-style: dashed; }
-        
-        /* ★手動入れ替え用の選択された座席のハイライト */
-        .selected-seat {
-            background-color: #fff59d !important;
-            border-color: #fbc02d !important;
-            color: #f57f17 !important;
-            box-shadow: 0 0 10px #fbc02d;
-        }
-    </style>
-</head>
-<body>
+/* 左側メニュー（サイドバー）のトグルボタン */
+.menu-toggle {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    background-color: #34495e;
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    font-size: 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    z-index: 1000;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    transition: background-color 0.2s;
+}
 
-    <h1>男女固定 席替えメーカー</h1>
-    <p>①「大きさ」を指定して座席作成後、座席を直接クリックして「性別枠の変更」や「名前の手動トレード」ができます。</p>
-    <p class="notice">【手動トレード】同じ性別の座席を2つ順にクリックすると、<span>中の名前だけを入れ替える</span>ことができます！</p>
-    <div id="save-status"></div>
+.menu-toggle:hover {
+    background-color: #2c3e50;
+}
 
-    <div class="config-wrapper">
-        <!-- 名前の入力設定エリア -->
-        <div class="setup-container">
-            <div class="input-group">
-                <label for="boys-input">男子の名前（改行区切り）</label>
-                <textarea id="boys-input">男子A&#13;男子B&#13;男子C&#13;男子D&#13;男子E&#13;男子F&#13;男子G&#13;男子H&#13;男子I&#13;男子J&#13;男子K&#13;男子L&#13;男子M&#13;男子N&#13;男子O</textarea>
-            </div>
-            <div class="input-group">
-                <label for="girls-input">女子の名前（改行区切り）</label>
-                <textarea id="girls-input">女子A&#13;女子B&#13;女子C&#13;女子D&#13;女子E&#13;女子F&#13;女子G&#13;女子H&#13;女子I&#13;女子J&#13;女子K&#13;女子L&#13;女子M&#13;女子N&#13;女子O</textarea>
-            </div>
-        </div>
+/* メニュー本体 */
+.sidebar {
+    position: fixed;
+    top: 0;
+    left: -350px; /* 初期状態は画面の外に隠す */
+    width: 310px;
+    height: 100%;
+    background-color: #ffffff;
+    box-shadow: 4px 0 10px rgba(0,0,0,0.1);
+    transition: left 0.3s ease;
+    z-index: 999;
+    text-align: left;
+    padding: 20px;
+    box-sizing: border-box;
+    overflow-y: auto;
+}
 
-        <div class="control-panel">
-            <!-- クラスの大きさ指定 -->
-            <div class="size-container">
-                <div class="size-group">
-                    <label for="row-input">縦の行数（奥行き）:</label>
-                    <input type="number" id="row-input" min="1" max="10" value="5"> 行
-                </div>
-                <div class="size-group">
-                    <label for="col-input">横の列数（並び）:</label>
-                    <input type="number" id="col-input" min="1" max="10" value="6"> 列
-                </div>
-            </div>
+.sidebar.open {
+    left: 0; /* メニューを開いたときの状態 */
+}
 
-            <!-- ★シャッフル割合の設定スライダー -->
-            <div class="shuffle-rate-container">
-                <div class="rate-group">
-                    <label for="rate-slider">シャッフルする割合:</label>
-                    <input type="range" id="rate-slider" min="10" max="100" value="100" step="10">
-                    <span id="rate-value">100%</span>
-                </div>
-            </div>
-        </div>
-    </div>
+/* 背景を暗くするレイヤー */
+.sidebar-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.3);
+    display: none;
+    z-index: 998;
+}
 
-    <!-- コントロールボタン -->
-    <div class="button-container">
-        <button id="apply-btn">① 設定を反映して座席作成</button>
-        <button id="shuffle-btn">② 指定割合で席替えを実行</button>
-    </div>
+.sidebar-overlay.show {
+    display: block;
+}
 
-    <div class="blackboard">黒板（前方）</div>
+/* メニュー内のタブ切り替えボタン */
+.tab-buttons {
+    display: flex;
+    border-bottom: 2px solid #ccc;
+    margin-bottom: 15px;
+    margin-top: 40px;
+}
 
-    <!-- 座席エリア -->
-    <div class="classroom" id="classroom"></div>
-    <script>
+.tab-btn {
+    flex: 1;
+    padding: 10px;
+    background: #eee;
+    border: none;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 13px;
+    transition: background-color 0.2s, color 0.2s;
+}
+
+.tab-btn.active {
+    background: #34495e;
+    color: white;
+}
+
+/* タブコンテンツの切り替え制御 */
+.tab-content {
+    display: none;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+/* メニュー内の入力項目のレイアウト */
+.input-group {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 15px;
+}
+
+.input-group label { 
+    font-weight: bold; 
+    margin-bottom: 5px; 
+    font-size: 13px; 
+}
+
+textarea {
+    width: 100%;
+    height: 120px;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    resize: none;
+    font-size: 13px;
+    box-sizing: border-box;
+}
+
+.size-container {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.size-group, .rate-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    font-weight: bold;
+}
+
+.size-group input[type="number"] {
+    width: 50px;
+    padding: 4px;
+    text-align: center;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+/* 生成ルール設定（チェックボックスエリア） */
+.checkbox-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+    font-weight: bold;
+    font-size: 14px;
+    cursor: pointer;
+    background: #f8f9fa;
+    padding: 12px;
+    border-radius: 6px;
+    border: 1px solid #e9ecef;
+    user-select: none;
+    transition: background-color 0.2s;
+}
+
+.checkbox-group:hover {
+    background: #e9ecef;
+}
+
+.checkbox-group input {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+}
+
+.rate-group input[type="range"] {
+    flex: 1;
+    cursor: pointer;
+}
+
+/* メニュー内の設定反映ボタン */
+#apply-btn {
+    background-color: #34495e;
+    color: white;
+    width: 100%;
+    padding: 12px;
+    margin-top: 10px;
+    border: none;
+    border-radius: 5px;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    transition: background-color 0.2s;
+}
+
+#apply-btn:hover {
+    background-color: #2c3e50;
+}
+
+/* メイン画面の席替え実行ボタン */
+.button-container { 
+    margin-bottom: 30px; 
+    display: flex; 
+    justify-content: center; 
+}
+
+#shuffle-btn {
+    border: none;
+    padding: 15px 50px;
+    font-size: 20px;
+    font-weight: bold;
+    border-radius: 6px;
+    cursor: pointer;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    transition: background-color 0.2s, transform 0.1s;
+    background-color: #2ecc71;
+    color: white;
+}
+
+#shuffle-btn:hover { 
+    background-color: #27ae60; 
+}
+
+#shuffle-btn:active {
+    transform: scale(0.98);
+}
+
+/* 黒板のデザイン */
+.blackboard {
+    background-color: #2e4d3c;
+    color: white;
+    width: 400px;
+    margin: 0 auto 30px auto;
+    padding: 12px;
+    border: 4px solid #8b5a2b;
+    border-radius: 3px;
+    font-weight: bold;
+    font-size: 18px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+/* 教室の座席レイアウトベース（列数はJS側で自動グリッド割り当て） */
+.classroom {
+    display: grid;
+    gap: 15px;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 25px;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+}
+
+/* 座席マスの基本デザイン */
+.seat {
+    box-sizing: border-box;
+    font-size: 20px;
+    font-weight: bold;
+    line-height: 1.3;
+    word-break: break-all;
+    border-radius: 8px;
+    border: 2px solid #ccc;
+    cursor: pointer;
+    user-select: none;
+    min-height: 80px;
+    padding: 10px 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.2s, box-shadow 0.2s, background-color 0.2s;
+    position: relative;
+}
+
+.seat:hover {
+    transform: scale(1.03);
+    box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+}
+
+/* 各座席のタイプ別色分け */
+.boy-seat { 
+    background-color: #e3f2fd; 
+    color: #0d47a1; 
+    border-color: #64b5f6; 
+}
+
+.girl-seat { 
+    background-color: #fce4ec; 
+    color: #880e4f; 
+    border-color: #f06292; 
+}
+
+.empty-seat { 
+    background-color: #eeeeee; 
+    color: #9e9e9e; 
+    border-color: #bdbdbd; 
+    border-style: dashed; 
+}
+
+/* 手動入れ替えで選択されたマス */
+.selected-seat {
+    background-color: #fff59d !important;
+    border-color: #fbc02d !important;
+    color: #f57f17 !important;
+    box-shadow: 0 0 10px #fbc02d;
+}
+
+/* 演出ON時のシャッフル中アニメーション効果 */
+.shuffling {
+    animation: pulse 0.15s infinite alternate;
+    background-color: #fff9c4 !important;
+    border-color: #fff59d !important;
+    color: #333 !important;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    100% { transform: scale(0.96); }
+}
+
+</style>
+<script>
 // =================================================================
-// 【操作改善版】長押し・ダブルクリック対応 JavaScript ロジック
+// 席替えJS 分割【1/2】: 画面生成・表示・操作管理
 // =================================================================
 
 let currentBoys = [];
 let currentGirls = [];
 let seats = [];
-let selectedSeat = null; // 手動トレード用
+let selectedSeat = null;
+let lastNeighborsPair = []; // 履歴保持用
 
 const classroom = document.getElementById('classroom');
 const statusDiv = document.getElementById('save-status');
 const rateSlider = document.getElementById('rate-slider');
 const rateValue = document.getElementById('rate-value');
 
-// シャッフル割合スライダーの数値表示連動
+// メニュー開閉用の要素
+const sidebar = document.getElementById('sidebar');
+const menuToggle = document.getElementById('menu-toggle');
+const sidebarOverlay = document.getElementById('sidebar-overlay');
+
+// 左側メニュー開閉イベント
+if (menuToggle && sidebar && sidebarOverlay) {
+    menuToggle.addEventListener('click', () => {
+        sidebar.classList.toggle('open');
+        sidebarOverlay.classList.toggle('show');
+    });
+    sidebarOverlay.addEventListener('click', () => {
+        sidebar.classList.remove('open');
+        sidebarOverlay.classList.remove('show');
+    });
+}
+
+// メニュー内タブ切り替え
+function switchTab(tabId) {
+    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+    if (event && event.target) event.target.classList.add('active');
+    const targetContent = document.getElementById(tabId);
+    if (targetContent) targetContent.classList.add('active');
+}
+
+// スライダー表示連動
 if (rateSlider && rateValue) {
     rateSlider.addEventListener('input', (e) => {
         rateValue.textContent = e.target.value + "%";
@@ -256,7 +411,7 @@ if (rateSlider && rateValue) {
 
 function showSaveStatus() {
     if (statusDiv) {
-        statusDiv.textContent = "データをブラウザに自動保存しました！";
+        statusDiv.textContent = "設定と配置を自動保存しました！";
         setTimeout(() => { statusDiv.textContent = ""; }, 2000);
     }
 }
@@ -268,13 +423,11 @@ function updateNamesFromInput() {
     currentGirls = girlsInput.split('\n').map(name => name.trim()).filter(name => name !== "");
 }
 
-// 男女・空席の枠を切り替える共通処理
 function toggleSeatGender(seat) {
     if (selectedSeat) {
         selectedSeat.classList.remove('selected-seat');
         selectedSeat = null;
     }
-
     const currentGender = seat.getAttribute('data-gender');
     if (currentGender === 'boy') {
         seat.setAttribute('data-gender', 'girl');
@@ -289,12 +442,11 @@ function toggleSeatGender(seat) {
         seat.classList.remove('empty-seat');
         seat.classList.add('boy-seat');
     }
-    
     displayNames();
     saveData();
 }
 
-// 指定された行数・列数で座席を作り直す
+// 座席枠の動かせる生成
 function buildClassroom(savedPatterns = null) {
     const rows = parseInt(document.getElementById('row-input').value) || 5;
     const cols = parseInt(document.getElementById('col-input').value) || 6;
@@ -319,78 +471,52 @@ function buildClassroom(savedPatterns = null) {
         seat.setAttribute('data-gender', genderType);
         seat.classList.add(`${genderType}-seat`);
 
-        // --- 長押し判定用の変数 ---
+        seat.addEventListener('dblclick', (e) => { e.preventDefault(); toggleSeatGender(seat); });
+
         let pressTimer = null;
         let isLongPress = false;
-
-        // 【操作方法1】ダブルクリックで「男・女・空席」を変更
-        seat.addEventListener('dblclick', (e) => {
-            e.preventDefault();
-            toggleSeatGender(seat);
-        });
-
-        // 長押し（タッチ開始 / マウスダウン）
         const startPress = () => {
             isLongPress = false;
-            pressTimer = setTimeout(() => {
-                isLongPress = true;
-                toggleSeatGender(seat); // 枠を変更
-            }, 600); // 0.6秒長押しで切り替え
+            pressTimer = setTimeout(() => { isLongPress = true; toggleSeatGender(seat); }, 600);
         };
+        const endPress = () => clearTimeout(pressTimer);
 
-        // 長押し解除（指を離す / マウスアップ / エリア外に出る）
-        const endPress = () => {
-            clearTimeout(pressTimer);
-        };
-
-        // マウスとタッチのイベント登録
         seat.addEventListener('mousedown', startPress);
         seat.addEventListener('mouseup', endPress);
         seat.addEventListener('mouseleave', endPress);
-        seat.addEventListener('touchstart', (e) => { startPress(); }, {passive: true});
+        seat.addEventListener('touchstart', startPress, {passive: true});
         seat.addEventListener('touchend', endPress, {passive: true});
-        seat.addEventListener('touchcancel', endPress, {passive: true});
 
-        // 【操作方法2】普通のクリック（短押し）で手動トレード
-        seat.addEventListener('click', (e) => {
-            // 長押しだった場合や、ダブルクリックの1回目は通常のトレード処理をスキップ
+        seat.addEventListener('click', () => {
             if (isLongPress) return;
-
             const gender = seat.getAttribute('data-gender');
 
-            // 1つ目の座席を選択
-            if (!selectedSeat) {
-                // 空席マスはトレード対象外
-                if (gender === 'empty') return;
-                selectedSeat = seat;
-                seat.classList.add('selected-seat');
-            } 
-            // 2つ目の座席を選択（トレード実行）
-            else {
-                // 選択したのが自分自身ならキャンセル
-                if (selectedSeat === seat) {
+            if (gender !== 'empty' && seat.textContent !== "（空席）" && seat.textContent !== "") {
+                if (!selectedSeat) {
+                    selectedSeat = seat;
+                    seat.classList.add('selected-seat');
+                } else {
+                    if (selectedSeat === seat) {
+                        selectedSeat.classList.remove('selected-seat');
+                        selectedSeat = null;
+                        return;
+                    }
+                    const firstGender = selectedSeat.getAttribute('data-gender');
+                    const secondGender = seat.getAttribute('data-gender');
+                    const mixGenderRule = document.getElementById('rule-mix-gender').checked;
+
+                    if (firstGender === secondGender || mixGenderRule) {
+                        const tempText = selectedSeat.textContent;
+                        selectedSeat.textContent = seat.textContent;
+                        seat.textContent = tempText;
+                        syncSeatTextToArrays(); 
+                    } else {
+                        alert("男女固定ルールが有効です。違う性別の席とは手動入れ替えできません！");
+                    }
                     selectedSeat.classList.remove('selected-seat');
                     selectedSeat = null;
-                    return;
+                    saveData();
                 }
-
-                const firstGender = selectedSeat.getAttribute('data-gender');
-                const secondGender = seat.getAttribute('data-gender');
-
-                // 同じ性別の枠同士であれば入れ替えを許可
-                if (firstGender === secondGender) {
-                    // もしどちらかが空の場合の文字も考慮して安全に入れ替え
-                    const tempText = selectedSeat.textContent;
-                    selectedSeat.textContent = seat.textContent;
-                    seat.textContent = tempText;
-                    syncSeatTextToArrays(); 
-                } else {
-                    alert("違う性別の席とは手動入れ替えできません！");
-                }
-                
-                selectedSeat.classList.remove('selected-seat');
-                selectedSeat = null;
-                saveData();
             }
         });
 
@@ -399,38 +525,77 @@ function buildClassroom(savedPatterns = null) {
     }
 }
 
-// 現在のリスト順で座席に名前を表示する
 function displayNames() {
     let boyIndex = 0;
     let girlIndex = 0;
+    let totalIndex = 0;
+    const mixGenderRule = document.getElementById('rule-mix-gender').checked;
+    const allMembers = [...currentBoys, ...currentGirls];
 
     seats.forEach(seat => {
         const gender = seat.getAttribute('data-gender');
-        if (gender === 'boy') {
-            seat.textContent = currentBoys[boyIndex] || "（空席）";
-            boyIndex++;
-        } else if (gender === 'girl') {
-            seat.textContent = currentGirls[girlIndex] || "（空席）";
-            girlIndex++;
-        } else if (gender === 'empty') {
+        if (gender !== 'empty') {
+            if (mixGenderRule) {
+                seat.textContent = allMembers[totalIndex] || "（空席）";
+                totalIndex++;
+            } else {
+                if (gender === 'boy') {
+                    seat.textContent = currentBoys[boyIndex] || "（空席）";
+                    boyIndex++;
+                } else if (gender === 'girl') {
+                    seat.textContent = currentGirls[girlIndex] || "（空席）";
+                    girlIndex++;
+                }
+            }
+        } else {
             seat.textContent = "【空席】";
         }
     });
 }
+// =================================================================
+// 席替えJS 分割【2/2】: アルゴリズム・自動保存・実行トリガー
+// =================================================================
 
 function syncSeatTextToArrays() {
-    const newBoys = [];
-    const newGirls = [];
-    seats.forEach(seat => {
-        const gender = seat.getAttribute('data-gender');
-        const text = seat.textContent;
-        if (text !== "（空席）" && text !== "【空席】" && text !== "") {
-            if (gender === 'boy') newBoys.push(text);
-            if (gender === 'girl') newGirls.push(text);
+    const mixGenderRule = document.getElementById('rule-mix-gender').checked;
+    if (mixGenderRule) {
+        const all = [];
+        seats.forEach(seat => {
+            const txt = seat.textContent;
+            if (txt && txt !== "（空席）" && txt !== "【空席】") all.push(txt);
+        });
+        currentBoys = all.slice(0, Math.ceil(all.length / 2));
+        currentGirls = all.slice(Math.ceil(all.length / 2));
+    } else {
+        const newBoys = [];
+        const newGirls = [];
+        seats.forEach(seat => {
+            const gender = seat.getAttribute('data-gender');
+            const text = seat.textContent;
+            if (text !== "（空席）" && text !== "【空席】" && text !== "") {
+                if (gender === 'boy') newBoys.push(text);
+                if (gender === 'girl') newGirls.push(text);
+            }
+        });
+        currentBoys = newBoys;
+        currentGirls = newGirls;
+    }
+}
+
+function collectCurrentNeighbors() {
+    const cols = parseInt(document.getElementById('col-input').value) || 6;
+    const pairs = [];
+    for (let i = 0; i < seats.length; i++) {
+        if ((i + 1) % cols !== 0 && (i + 1) < seats.length) {
+            const nameA = seats[i].textContent;
+            const nameB = seats[i+1].textContent;
+            if (nameA && nameB && nameA !== "（空席）" && nameB !== "（空席）" && nameA !== "【空席】" && nameB !== "【空席】") {
+                pairs.push(`${nameA}-${nameB}`);
+                pairs.push(`${nameB}-${nameA}`);
+            }
         }
-    });
-    currentBoys = newBoys;
-    currentGirls = newGirls;
+    }
+    return pairs;
 }
 
 function partialShuffle(array, rate) {
@@ -450,10 +615,39 @@ function partialShuffle(array, rate) {
         const j = Math.floor(Math.random() * (i + 1));
         [targetValues[i], targetValues[j]] = [targetValues[j], targetValues[i]];
     }
+    indices.forEach((originalIdx, i) => { array[originalIdx] = targetValues[i]; });
+}
 
-    indices.forEach((originalIdx, i) => {
-        array[originalIdx] = targetValues[i];
-    });
+function executeShuffleCalculation() {
+    const rate = rateSlider ? parseInt(rateSlider.value) : 100;
+    const mixGenderRule = document.getElementById('rule-mix-gender').checked;
+    const noSameNeighborRule = document.getElementById('rule-no-same-neighbor').checked;
+
+    syncSeatTextToArrays();
+
+    let attempts = 0;
+    while (attempts < 100) {
+        if (mixGenderRule) {
+            let allMembers = [...currentBoys, ...currentGirls];
+            partialShuffle(allMembers, rate);
+            currentBoys = allMembers.slice(0, currentBoys.length);
+            currentGirls = allMembers.slice(currentBoys.length);
+        } else {
+            partialShuffle(currentBoys, rate);
+            partialShuffle(currentGirls, rate);
+        }
+
+        displayNames();
+
+        if (noSameNeighborRule && lastNeighborsPair.length > 0) {
+            const currentPairs = collectCurrentNeighbors();
+            const hasOverlap = currentPairs.some(pair => lastNeighborsPair.includes(pair));
+            if (!hasOverlap) break;
+            attempts++;
+        } else {
+            break; 
+        }
+    }
 }
 
 function saveData() {
@@ -465,14 +659,18 @@ function saveData() {
         patterns: seats.map(seat => seat.getAttribute('data-gender')),
         currentBoys: currentBoys,
         currentGirls: currentGirls,
-        rate: rateSlider ? rateSlider.value : 100
+        rate: rateSlider ? rateSlider.value : 100,
+        mixGender: document.getElementById('rule-mix-gender').checked,
+        noSameNeighbor: document.getElementById('rule-no-same-neighbor').checked,
+        playEffect: document.getElementById('rule-play-effect').checked,
+        lastNeighborsPair: lastNeighborsPair
     };
-    localStorage.setItem('sekigae_maker_config_v2', JSON.stringify(data));
+    localStorage.setItem('sekigae_maker_config_v3', JSON.stringify(data));
     showSaveStatus();
 }
 
 function loadData() {
-    const savedData = localStorage.getItem('sekigae_maker_config_v2');
+    const savedData = localStorage.getItem('sekigae_maker_config_v3');
     if (savedData) {
         const data = JSON.parse(savedData);
         document.getElementById('boys-input').value = data.boysInput;
@@ -480,6 +678,11 @@ function loadData() {
         document.getElementById('row-input').value = data.rows;
         document.getElementById('col-input').value = data.cols;
         
+        document.getElementById('rule-mix-gender').checked = data.mixGender || false;
+        document.getElementById('rule-no-same-neighbor').checked = data.noSameNeighbor || false;
+        document.getElementById('rule-play-effect').checked = (data.playEffect !== undefined) ? data.playEffect : true;
+        lastNeighborsPair = data.lastNeighborsPair || [];
+
         if (rateSlider && data.rate) {
             rateSlider.value = data.rate;
             rateValue.textContent = rateSlider.value + "%";
@@ -507,19 +710,34 @@ document.getElementById('shuffle-btn').addEventListener('click', () => {
         selectedSeat.classList.remove('selected-seat');
         selectedSeat = null;
     }
-    syncSeatTextToArrays();
-    const rate = rateSlider ? parseInt(rateSlider.value) : 100;
-    partialShuffle(currentBoys, rate);
-    partialShuffle(currentGirls, rate);
-    displayNames();
-    saveData();
+    lastNeighborsPair = collectCurrentNeighbors();
+    const playEffect = document.getElementById('rule-play-effect').checked;
+
+    if (playEffect) {
+        let duration = 800;
+        let intervalTime = 60;
+        seats.forEach(seat => { if(seat.getAttribute('data-gender') !== 'empty') seat.classList.add('shuffling'); });
+        let timer = setInterval(() => { executeShuffleCalculation(); }, intervalTime);
+        setTimeout(() => {
+            clearInterval(timer);
+            seats.forEach(seat => seat.classList.remove('shuffling'));
+            executeShuffleCalculation(); 
+            saveData();
+        }, duration);
+    } else {
+        executeShuffleCalculation();
+        saveData();
+    }
 });
 
 document.getElementById('apply-btn').addEventListener('click', handleApply);
 document.getElementById('boys-input').addEventListener('input', saveData);
 document.getElementById('girls-input').addEventListener('input', saveData);
+document.getElementById('rule-mix-gender').addEventListener('change', () => { displayNames(); saveData(); });
+document.getElementById('rule-no-same-neighbor').addEventListener('change', saveData);
+document.getElementById('rule-play-effect').addEventListener('change', saveData);
 
 loadData();
+
+    
 </script>
-</body>
-</html>
