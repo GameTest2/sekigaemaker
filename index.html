@@ -237,7 +237,7 @@
 
     <script>
 // =================================================================
-// 席替えJS 分割【1/2】: 画面生成・リアルタイム同期・操作管理
+// 席替えJS 分割【1/2】: 画面生成・表示・色自動切り替え
 // =================================================================
 
 let currentBoys = [];
@@ -246,7 +246,7 @@ let seats = [];
 let selectedSeat = null;
 
 let lastNeighborsPair = []; 
-let previousSeatsData = []; // ★新設：前回の名前配置の履歴を保存する配列
+let previousSeatsData = []; // 前回の名前配置の履歴を保存する配列
 
 const classroom = document.getElementById('classroom');
 const previousContainer = document.getElementById('previous-container');
@@ -306,16 +306,10 @@ function toggleSeatGender(seat) {
     const currentGender = seat.getAttribute('data-gender');
     if (currentGender === 'boy') {
         seat.setAttribute('data-gender', 'girl');
-        seat.classList.remove('boy-seat');
-        seat.classList.add('girl-seat');
     } else if (currentGender === 'girl') {
         seat.setAttribute('data-gender', 'empty');
-        seat.classList.remove('girl-seat');
-        seat.classList.add('empty-seat');
     } else {
         seat.setAttribute('data-gender', 'boy');
-        seat.classList.remove('empty-seat');
-        seat.classList.add('boy-seat');
     }
     displayNames();
     saveData();
@@ -343,7 +337,6 @@ function buildClassroom(savedPatterns = null) {
         }
 
         seat.setAttribute('data-gender', genderType);
-        seat.classList.add(`${genderType}-seat`);
 
         seat.addEventListener('dblclick', (e) => { e.preventDefault(); toggleSeatGender(seat); });
 
@@ -399,35 +392,53 @@ function buildClassroom(savedPatterns = null) {
     }
 }
 
+// ★バグ修正：座っている人の性別を判定して、背景色をリアルタイムに上書き
 function displayNames() {
     let boyIndex = 0;
     let girlIndex = 0;
     let totalIndex = 0;
     const mixGenderRule = document.getElementById('rule-mix-gender').checked;
+    updateNamesFromInput(); // 元の名前リストを常に最新参照
     const allMembers = [...currentBoys, ...currentGirls];
 
     seats.forEach(seat => {
-        const gender = seat.getAttribute('data-gender');
-        if (gender !== 'empty') {
+        const initialGender = seat.getAttribute('data-gender');
+        seat.classList.remove('boy-seat', 'girl-seat', 'empty-seat');
+        
+        if (initialGender !== 'empty') {
+            let assignedName = "";
             if (mixGenderRule) {
-                seat.textContent = allMembers[totalIndex] || "（空席）";
+                assignedName = allMembers[totalIndex] || "（空席）";
                 totalIndex++;
             } else {
-                if (gender === 'boy') {
-                    seat.textContent = currentBoys[boyIndex] || "（空席）";
+                if (initialGender === 'boy') {
+                    assignedName = currentBoys[boyIndex] || "（空席）";
                     boyIndex++;
-                } else if (gender === 'girl') {
-                    seat.textContent = currentGirls[girlIndex] || "（空席）";
+                } else if (initialGender === 'girl') {
+                    assignedName = currentGirls[girlIndex] || "（空席）";
                     girlIndex++;
                 }
             }
+            
+            seat.textContent = assignedName;
+
+            // 実際に座った名前の性別リストに応じてマスの色を書き換える
+            if (assignedName !== "（空席）") {
+                if (currentBoys.includes(assignedName)) {
+                    seat.classList.add('boy-seat');
+                } else {
+                    seat.classList.add('girl-seat');
+                }
+            } else {
+                seat.classList.add(`${initialGender}-seat`);
+            }
         } else {
             seat.textContent = "【空席】";
+            seat.classList.add('empty-seat');
         }
     });
 }
 
-// ★新設：前回の配置データを上のミニ座席に描画する関数
 function drawPreviousClassroom() {
     if (!previousSeatsData || previousSeatsData.length === 0) {
         previousContainer.style.display = 'none';
@@ -451,14 +462,19 @@ function drawPreviousClassroom() {
 
 function syncSeatTextToArrays() {
     const mixGenderRule = document.getElementById('rule-mix-gender').checked;
+    updateNamesFromInput(); // 最新の所属ベースで逆同期を行うため読み込み
+    
     if (mixGenderRule) {
         const all = [];
         seats.forEach(seat => {
             const txt = seat.textContent;
             if (txt && txt !== "（空席）" && txt !== "【空席】") all.push(txt);
         });
-        currentBoys = all.slice(0, Math.ceil(all.length / 2));
-        currentGirls = all.slice(Math.ceil(all.length / 2));
+        // 元々男子だった人と女子だった人で綺麗に分配
+        const bList = all.filter(name => currentBoys.includes(name));
+        const gList = all.filter(name => currentGirls.includes(name));
+        currentBoys = bList;
+        currentGirls = gList;
     } else {
         const newBoys = [];
         const newGirls = [];
@@ -557,7 +573,7 @@ function saveData() {
         noSameNeighbor: document.getElementById('rule-no-same-neighbor').checked,
         playEffect: document.getElementById('rule-play-effect').checked,
         lastNeighborsPair: lastNeighborsPair,
-        previousSeatsData: previousSeatsData // 履歴データも一緒に保存
+        previousSeatsData: previousSeatsData
     };
     localStorage.setItem('sekigae_maker_config_v4', JSON.stringify(data));
     showSaveStatus();
@@ -588,13 +604,12 @@ function loadData() {
 
         buildClassroom(data.patterns);
         displayNames();
-        drawPreviousClassroom(); // 履歴を上部に描画
+        drawPreviousClassroom();
     } else {
         handleApply();
     }
 }
 
-// 設定変更時などの自動リアルタイム更新（反映ボタンなしで即座に連動）
 function handleApply() {
     buildClassroom();
     updateNamesFromInput();
@@ -602,14 +617,12 @@ function handleApply() {
     saveData();
 }
 
-// 席替え実行ボタン
 document.getElementById('shuffle-btn').addEventListener('click', () => {
     if (selectedSeat) {
         selectedSeat.classList.remove('selected-seat');
         selectedSeat = null;
     }
 
-    // ★席替えの直前に、現在の並びを「前の配置（履歴）」としてそっくり記録
     previousSeatsData = seats.map(seat => seat.textContent);
     drawPreviousClassroom();
 
@@ -633,7 +646,6 @@ document.getElementById('shuffle-btn').addEventListener('click', () => {
     }
 });
 
-// ★手動入力欄や行数・列数をいじったら自動で反映・保存が走る監視トリガー（ボタンいらず化）
 document.getElementById('boys-input').addEventListener('input', handleApply);
 document.getElementById('girls-input').addEventListener('input', handleApply);
 document.getElementById('row-input').addEventListener('input', handleApply);
